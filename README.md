@@ -5,7 +5,7 @@ SPDX-License-Identifier: MIT
 
 # nix-utils
 
-A collection of Nix utilities.
+A collection of personal Nix utilities.
 
 ## Utilities
 
