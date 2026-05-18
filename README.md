@@ -34,15 +34,15 @@ nix-utils.mkShell {
 ### `overrideImports`
 
 Takes a source tree and an attribute set mapping Nix filenames to override
-files. For each entry, the original file is renamed and replaced with a
-wrapper that passes the value from importing the original as an argument to the
-override file.
+paths. For each entry, the original file is renamed and replaced with a wrapper
+that imports the override path, passing it a path value pointing to the
+renamed original.
 
 ```nix
 nix-utils.overrideImports sources.nixpkgs {
   "default.nix" = builtins.toFile "override.nix" ''
     orig: { overlays ? [], ... }@args:
-    orig (args // { overlays = [ (final: prev: { /* ... */ }) ] ++ overlays; })
+    import orig (args // { overlays = [ (final: prev: { /* ... */ }) ] ++ overlays; })
   '';
 }
 ```
@@ -53,6 +53,10 @@ previous one, with originals preserved as `*.orig.N.nix`.
 Useful when you want override a certain entry point but keep the directory
 structure intact. (E.g., so `import <nixpkgs> {}` includes a desired overlay,
 but `import <nixpkgs/lib>` still works.)
+
+When the source is already in the Nix store (e.g., a fetched source or channel
+path), wrap it with `builtins.storePath src` to reference it directly rather
+than having nix copy it an extra time.
 
 ### `fetch-nix-fod`
 

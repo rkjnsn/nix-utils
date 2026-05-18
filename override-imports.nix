@@ -6,7 +6,16 @@
 src: overrides:
 
 let
-  doOverride = name: overrideFile:
+  srcType = builtins.readFileType src;
+  checkedSrc =
+    if srcType == "directory" then src
+    else if srcType == "symlink" then throw ''
+      overrideImports: src must be a real directory, not a symlink: ${toString src}
+      Hint: if src is a symlink to a store path, use builtins.storePath (toString src) to get the real store path without copying.
+    ''
+    else throw "overrideImports: src must be a directory (got type '${srcType}'): ${toString src}";
+
+  doOverride = name: overridePath:
     let
       captures = builtins.match "(.*)\\.nix" name;
       stem =
@@ -32,14 +41,13 @@ let
       ${coreutils}/bin/mv "$target_stem.nix" "$orig_name"
 
       cat << EOF > "$target_stem.nix"
-      import ${lib.strings.escapeNixString overrideFile} (
-        import $(printf '%s' "$orig_name" | ${jq}/bin/jq -R -s .)
-      )
+      import ${lib.strings.escapeNixString overridePath}
+        (builtins.toPath $(printf '%s' "$orig_name" | ${jq}/bin/jq -R -s .))
       EOF
     '';
 in
 runCommand "overridden" {} ''
-  ${coreutils}/bin/cp -a "${src}" "$out"
+  ${coreutils}/bin/cp -a "${checkedSrc}" "$out"
 
   ${builtins.concatStringsSep "\n"
     (lib.mapAttrsToList doOverride overrides)}
