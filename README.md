@@ -124,3 +124,25 @@ realized, prepended to `NIX_PATH`, and the command executed.
 ```
 with-nix-sources sources.nix -- nix-build '<nixpkgs>' -A hello
 ```
+
+One possible way to use npins with Home Manager:
+
+In `home.nix`:
+
+    nix.channels = {
+      nixpkgs = builtins.storePath pkgs.path;
+      home-manager = builtins.storePath (import <home-manager> { }).path;
+    };
+
+That way `<nixpkgs>` and `<home-manager>` will always refer to the channel
+versions with which the current generation was built.
+
+To update:
+
+```
+npins update
+with-nix-sources ./npins -- home-manager switch
+```
+
+If the new generation builds and activates successfully, `<nixpkgs>` and
+`<home-manager>` will refer to the updated versions.
