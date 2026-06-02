@@ -8,25 +8,35 @@ writeShellScriptBin "with-nix-sources" ''
 
   usage() {
     echo "Usage: $0 PATH [PATH...] -- COMMAND [ARGS...]
+       $0 -i|--instantiate PATH [PATH...]
 
   Each PATH should be an importable path (a .nix file or a directory with a
   default.nix) evaluating to an attribute set that maps channel names to Nix
   expressions coercible to paths (e.g., paths, derivations, or fetchTarball
   calls). These are prepended to NIX_PATH and COMMAND is executed with the
-  new NIX_PATH set." >&2
+  new NIX_PATH set.
+
+  -i, --instantiate  Print the derivation path for the resulting NIX_PATH
+                     contents without building and exit." >&2
     exit "''${1:-1}"
   }
 
+  instantiate=false
   files=()
   while [[ $# -gt 0 ]]; do
     case $1 in
       -h|--help) usage 0 ;;
+      -i|--instantiate) instantiate=true; shift ;;
       --) shift; break ;;
       *) files+=("$1"); shift ;;
     esac
   done
 
-  [[ ''${#files[@]} -gt 0 && $# -gt 0 ]] || usage
+  if $instantiate; then
+    [[ ''${#files[@]} -gt 0 && $# -eq 0 ]] || usage
+  else
+    [[ ''${#files[@]} -gt 0 && $# -gt 0 ]] || usage
+  fi
 
   args=()
   count=''${#files[@]}
@@ -54,6 +64,10 @@ writeShellScriptBin "with-nix-sources" ''
         args = ["-c" "printf '%s' \"$nixPath\" > \"$out\""];
         inherit nixPath;
       }'
+
+  if $instantiate; then
+    exec ${nix}/bin/nix-instantiate -E "$expr" "''${args[@]}"
+  fi
 
   # Using nix-build to realize a file containing the NIX_PATH value
   # ensures that the constituent paths are also realized.
