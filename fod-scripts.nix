@@ -144,10 +144,11 @@ rec {
       echo "$1" | ${gnugrep}/bin/grep -o "$2" | ${gnused}/bin/sed "s/$2/\1/"
     }
 
-    # Derive([("out","/nix/store/...","r:sha256","<hex>")],…[…("name","<name>")…])
+    # Derive([("out","/nix/store/<hash>-<name>","r:sha256","<hex>")],…)
+    out_path=$(extract "$drv_content" '^Derive(\[("[^"]*","\([^"]*\)","[^"]*","[^"]*")')
     hash_algo=$(extract "$drv_content" '^Derive(\[("[^"]*","[^"]*","\([^"]*\)","[^"]*")')
     hash_hex=$(extract "$drv_content" '^Derive(\[("[^"]*","[^"]*","[^"]*","\([^"]*\)")')
-    name=$(extract "$drv_content" '("name","\([^"]*\)")')
+    name=$(${coreutils}/bin/basename "$out_path" | ${gnused}/bin/sed 's/^[^-]*-//')
 
     case "$hash_algo" in
       r:sha256) recursive=true ;;
