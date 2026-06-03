@@ -15,27 +15,27 @@ writeShellScriptBin "nix-build-remotely" ''
   shopt -s lastpipe
 
   usage() {
-    echo "Build a Nix derivation on a remote machine and copy results back." >&2
-    echo "" >&2
-    echo "Usage: $0 [options] <remote> <nix-instantiate args...> [-- <nix-store --realise args...>]" >&2
-    echo "       $0 [options] -d <remote> <drv-path>... [-- <nix-store --realise args...>]" >&2
-    echo "  -d, --drv                   provide .drv paths directly instead of running" >&2
-    echo "                              nix-instantiate" >&2
-    echo "  -n, --no-send-deps          don't send any outputs from the drv closure to" >&2
-    echo "                              the remote before building" >&2
-    echo "  -b, --copy-build-closure    copy back all build outputs, not just the runtime" >&2
-    echo "                              closure" >&2
-    echo "  -f, --copy-on-failure       with -b, copy back successfully-built" >&2
-    echo "                              dependencies even if the build fails" >&2
-    echo "  -o, --outlink <path>        create a GC root symlink at <path> after target" >&2
-    echo "                              is successfully built and copied back; multiple" >&2
-    echo "                              results are named <path>, <path>-2, et cetera" >&2
-    echo "  -s, --use-substitutes       when copying paths between machines, prefer" >&2
-    echo "                              substituting on the destination over copying" >&2
-    echo "                              when possible; doesn't impact whether" >&2
-    echo "                              substitutions are used when building" >&2
-    echo "  -i, --ignore-local          try to build the target remotely even if it" >&2
-    echo "                              already exists locally (but still send its deps)" >&2
+    echo "Build a Nix derivation on a remote machine and copy results back.
+
+  Usage: $0 [options] <remote> <nix-instantiate args...> [-- <nix-store --realise args...>]
+         $0 [options] -d <remote> <drv-path>... [-- <nix-store --realise args...>]
+    -d, --drv                   provide .drv paths directly instead of running
+                                nix-instantiate
+    -n, --no-send-deps          don't send any outputs from the drv closure to
+                                the remote before building
+    -b, --copy-build-closure    copy back all build outputs, not just the runtime
+                                closure
+    -f, --copy-on-failure       with -b, copy back successfully-built
+                                dependencies even if the build fails
+    -o, --outlink <path>        create a GC root symlink at <path> after target
+                                is successfully built and copied back; multiple
+                                results are named <path>, <path>-2, et cetera
+    -s, --use-substitutes       when copying paths between machines, prefer
+                                substituting on the destination over copying
+                                when possible; doesn't impact whether
+                                substitutions are used when building
+    -i, --ignore-local          try to build the target remotely even if it
+                                already exists locally (but still send its deps)" >&2
     exit "''${1:-1}"
   }
 
@@ -82,7 +82,7 @@ writeShellScriptBin "nix-build-remotely" ''
   copy_closure_opts=()
   outlink=""
   while [[ $# -gt 0 ]]; do
-    case "$1" in
+    case $1 in
       -h|--help) usage 0 ;;
       -d|--drv) use_drv=true; shift ;;
       -n|--no-send-deps) send_outputs=false; shift ;;

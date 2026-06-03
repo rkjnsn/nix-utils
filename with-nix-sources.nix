@@ -7,8 +7,10 @@ writeShellScriptBin "with-nix-sources" ''
   set -euo pipefail
 
   usage() {
-    echo "Usage: $0 PATH [PATH...] -- COMMAND [ARGS...]
-       $0 -i|--instantiate PATH [PATH...]
+    echo "Prepend Nix channel sources to NIX_PATH and run a command.
+
+  Usage: $0 PATH [PATH...] -- COMMAND [ARGS...]
+         $0 -i|--instantiate PATH [PATH...]
 
   Each PATH should be an importable path (a .nix file or a directory with a
   default.nix) evaluating to an attribute set that maps channel names to Nix
@@ -16,8 +18,8 @@ writeShellScriptBin "with-nix-sources" ''
   calls). These are prepended to NIX_PATH and COMMAND is executed with the
   new NIX_PATH set.
 
-  -i, --instantiate  Print the derivation path for the resulting NIX_PATH
-                     contents without building and exit." >&2
+    -i, --instantiate  Print the derivation path for the resulting NIX_PATH
+                       contents without building and exit." >&2
     exit "''${1:-1}"
   }
 
@@ -71,7 +73,8 @@ writeShellScriptBin "with-nix-sources" ''
 
   # Using nix-build to realize a file containing the NIX_PATH value
   # ensures that the constituent paths are also realized.
-  nix_path=$(< "$(${nix}/bin/nix-build --no-out-link -E "$expr" "''${args[@]}")")
+  nix_path_file=$(${nix}/bin/nix-build --no-out-link -E "$expr" "''${args[@]}")
+  nix_path=$(< "$nix_path_file")
   if [[ -n $nix_path ]]; then
     export NIX_PATH="$nix_path''${NIX_PATH:+:$NIX_PATH}"
   fi

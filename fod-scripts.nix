@@ -19,30 +19,30 @@ rec {
     set -euo pipefail
 
     usage() {
-      echo "Fetch a fixed-output derivation's content from cache.nixos.org." >&2
-      echo "" >&2
-      echo "Usage: $0 [-r] [-o output] <sha256-hex> <name>" >&2
-      echo "  -r          recursive (directory) mode" >&2
-      echo "  -o output   output path (default: ./<name>)" >&2
-      echo "  sha256-hex  expected content hash in hexadecimal" >&2
-      echo "  name        derivation name (e.g., foo.tar.gz)" >&2
+      echo "Fetch a fixed-output derivation's content from cache.nixos.org.
+
+Usage: $0 [-r] [-o output] <sha256-hex> <name>
+  -r          recursive (directory) mode
+  -o output   output path (default: ./<name>)
+  sha256-hex  expected content hash in hexadecimal
+  name        derivation name (e.g., foo.tar.gz)" >&2
       exit "''${1:-1}"
     }
 
     recursive=false
     output=""
     positional=()
-    while [ $# -gt 0 ]; do
-      case "$1" in
+    while [[ $# -gt 0 ]]; do
+      case $1 in
         -r) recursive=true; shift ;;
-        -o) [ $# -ge 2 ] || usage; output="$2"; shift 2 ;;
+        -o) [[ $# -ge 2 ]] || usage; output="$2"; shift 2 ;;
         -h|--help) usage 0 ;;
         -*) usage ;;
         *) positional+=("$1"); shift ;;
       esac
     done
 
-    [ ''${#positional[@]} -eq 2 ] || usage
+    [[ ''${#positional[@]} -eq 2 ]] || usage
     hash_hex="''${positional[0]}"
     name="''${positional[1]}"
     output="''${output:-./$name}"
@@ -98,12 +98,12 @@ rec {
 
     nar_url=$(echo "$narinfo" | ${gnugrep}/bin/grep '^URL:' | ${coreutils}/bin/cut -d' ' -f2)
     compression=$(echo "$narinfo" | ${gnugrep}/bin/grep '^Compression:' | ${coreutils}/bin/cut -d' ' -f2)
-    [ -n "$nar_url" ] || { echo "error: narinfo missing URL field" >&2; exit 1; }
-    [ -n "$compression" ] || { echo "error: narinfo missing Compression field" >&2; exit 1; }
+    [[ -n "$nar_url" ]] || { echo "error: narinfo missing URL field" >&2; exit 1; }
+    [[ -n "$compression" ]] || { echo "error: narinfo missing Compression field" >&2; exit 1; }
 
     echo "Downloading: $nar_url ($compression)" >&2
 
-    case "$compression" in
+    case $compression in
       xz)   decompress="${xz}/bin/xz -d" ;;
       bzip2) decompress="${bzip2}/bin/bzip2 -d" ;;
       zstd)  decompress="${zstd}/bin/zstd -d" ;;
@@ -114,7 +114,7 @@ rec {
     ${curl}/bin/curl -sfL "https://cache.nixos.org/$nar_url" | $decompress | ${nix}/bin/nix-store --restore "$output"
 
     actual=$(${nix}/bin/nix-hash --type sha256 $($recursive || echo --flat) "$output")
-    [ "$actual" = "$hash_hex" ] || { echo "error: hash mismatch: expected $hash_hex, got $actual" >&2; exit 1; }
+    [[ "$actual" = "$hash_hex" ]] || { echo "error: hash mismatch: expected $hash_hex, got $actual" >&2; exit 1; }
 
     echo "Written: $output" >&2
   '';
@@ -123,20 +123,20 @@ rec {
     set -euo pipefail
 
     usage() {
-      echo "Parse a .drv file and fetch its fixed-output content into the Nix store." >&2
-      echo "" >&2
-      echo "Usage: $0 <path-to-.drv>" >&2
+      echo "Parse a .drv file and fetch its fixed-output content into the Nix store.
+
+Usage: $0 <path-to-.drv>" >&2
       exit "''${1:-1}"
     }
 
-    case "''${1:-}" in
+    case ''${1:-} in
       -h|--help) usage 0 ;;
     esac
 
-    [ $# -eq 1 ] || usage
+    [[ $# -eq 1 ]] || usage
     drv="$1"
 
-    [ -f "$drv" ] || { echo "error: $drv not found" >&2; exit 1; }
+    [[ -f "$drv" ]] || { echo "error: $drv not found" >&2; exit 1; }
 
     drv_content=$(< "$drv")
 
@@ -150,7 +150,7 @@ rec {
     hash_hex=$(extract "$drv_content" '^Derive(\[("[^"]*","[^"]*","[^"]*","\([^"]*\)")')
     name=$(${coreutils}/bin/basename "$out_path" | ${gnused}/bin/sed 's/^[^-]*-//')
 
-    case "$hash_algo" in
+    case $hash_algo in
       r:sha256) recursive=true ;;
       sha256) recursive=false ;;
       *) echo "error: unsupported hash algorithm: $hash_algo" >&2; exit 1 ;;
