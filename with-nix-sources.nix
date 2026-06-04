@@ -53,9 +53,14 @@ writeShellScriptBin "with-nix-sources" ''
         builtins.attrValues (builtins.mapAttrs f set);
       sources = builtins.concatLists
         (mapAttrsToList
-          (_: file: mapAttrsToList
-            (name: path: "''${name}=''${path}")
-            (import file))
+          (_: file:
+            let
+              imported = import file;
+              isCallable = v: builtins.isFunction v
+                  || (builtins.isAttrs v && v ? __functor);
+              sources = if isCallable imported then imported {} else imported;
+            in
+            mapAttrsToList (name: path: "''${name}=''${path}") sources)
           args);
       nixPath = builtins.concatStringsSep ":" sources;
     in
