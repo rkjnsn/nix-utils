@@ -5,10 +5,11 @@
   pkgs ? import <nixpkgs> { },
 }:
 
-{
+rec {
   mkShell = pkgs.callPackage ./mk-shell.nix { };
   overrideImports = pkgs.callPackage ./override-imports.nix { };
-  inherit (pkgs.callPackage ./fod-scripts.nix { }) fetch-nix-fod realize-nix-fod;
+  fetch-nix-fod = pkgs.callPackage ./fetch-nix-fod.nix { };
+  realize-nix-fod = pkgs.callPackage ./realize-nix-fod.nix { inherit fetch-nix-fod; };
   with-nix-sources = pkgs.callPackage ./with-nix-sources.nix { };
   nix-build-remotely = pkgs.callPackage ./nix-build-remotely.nix { };
 }
