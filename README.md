@@ -49,6 +49,17 @@ nix-utils.overrideImports sources.nixpkgs {
 Multiple overrides to the same file stack: each override wraps the
 previous one, with originals preserved as `*.orig.N.nix`.
 
+A `patches` attribute (a list of patch files) may also be given; these are
+applied with `patch -p1` to the source tree before the import overrides are
+performed.
+
+```nix
+nix-utils.overrideImports sources.nixpkgs {
+  patches = [ ./fix-something.patch ];
+  "default.nix" = builtins.toFile "override.nix" ''/* ... */'';
+}
+```
+
 Useful when you want override a certain entry point but keep the directory
 structure intact. (E.g., so `import <nixpkgs> {}` includes a desired overlay,
 but `import <nixpkgs/lib>` still works.)

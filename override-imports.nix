@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2026 Erik Jensen <erikjensen@rkjnsn.net>
 # SPDX-License-Identifier: MIT
 
-{ lib, runCommand, coreutils, jq }:
+{ lib, runCommand, coreutils, gnupatch, jq }:
 
-src: overrides:
+src: args:
 
 let
+  patches = args.patches or [];
+  overrides = removeAttrs args [ "patches" ];
+
   srcType = builtins.readFileType src;
   checkedSrc =
     if srcType == "directory" then src
@@ -37,7 +40,6 @@ let
       done
       orig_name="$target_stem.orig.$n.nix"
 
-      ${coreutils}/bin/chmod u+w "$(${coreutils}/bin/dirname "$target_stem")"
       ${coreutils}/bin/mv "$target_stem.nix" "$orig_name"
 
       cat << EOF > "$target_stem.nix"
@@ -48,6 +50,14 @@ let
 in
 runCommand "overridden" {} ''
   ${coreutils}/bin/cp -a "${checkedSrc}" "$out"
+  ${coreutils}/bin/chmod -R u+w "$out"
+
+  ${lib.concatMapStringsSep "\n"
+    (patch: ''
+      echo "applying patch: "${lib.escapeShellArg "${patch}"}
+      ${gnupatch}/bin/patch -p1 -d "$out" < ${lib.escapeShellArg "${patch}"}
+    '')
+    patches}
 
   ${builtins.concatStringsSep "\n"
     (lib.mapAttrsToList doOverride overrides)}
