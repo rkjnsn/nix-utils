@@ -39,12 +39,17 @@ let
         n=$((n + 1))
       done
       orig_name="$target_stem.orig.$n.nix"
+      orig_basename=${lib.escapeShellArg (baseNameOf stem)}".orig.$n.nix"
 
       ${coreutils}/bin/mv "$target_stem.nix" "$orig_name"
 
+      # Reference the original by a path relative to the generated file (./. is
+      # the file's own directory) rather than an absolute store path. This
+      # ensures that if the tree is copied and modified further, the override
+      # will import the new path.
       cat << EOF > "$target_stem.nix"
       import ${lib.strings.escapeNixString overridePath}
-        (builtins.toPath $(printf '%s' "$orig_name" | ${jq}/bin/jq -R -s .))
+        (./. + $(printf '%s' "/$orig_basename" | ${jq}/bin/jq -R -s .))
       EOF
     '';
 in
